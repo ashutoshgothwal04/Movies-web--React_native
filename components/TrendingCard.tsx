@@ -1,11 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
+import { Link } from 'expo-router'
 
-const TrendingCard = () => {
+const TrendingCard = ({movie: {movie_id, title, poster_url}, index} : TrendingCardProps) => {
   return (
-    <View>
-      <Text>TrendingCard</Text>
-    </View>
+   <Link href={`/movies/${movie_id}`} asChild>
+   
+   </Link>
   )
 }
 
