@@ -9,7 +9,7 @@ interface Props {
     onPress?: () => void;
 }
 
-const Searchbar = ({ placeholder, onPress }: Props) => {
+const Searchbar = ({ placeholder, onPress, value, onChangeText }: Props) => {
     return (
         <View className="flex-row items-center bg-dark-200 rounded-full px-5 py-4">
             <Image
@@ -22,10 +22,10 @@ const Searchbar = ({ placeholder, onPress }: Props) => {
             <TextInput
                 onPress={onPress}
                 placeholder={placeholder}
-                value=''
-                // onChangeText={}
-                className="flex-1 ml-2 text-white"
+                value={value}
+                onChangeText={onChangeText}
                 placeholderTextColor="#A8B5DB"
+                className="flex-1 ml-2 text-white"
             />
         </View>
     );
