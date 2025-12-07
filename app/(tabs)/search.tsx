@@ -1,117 +1,133 @@
-import { View, Text, Image, FlatList, ActivityIndicator } from "react-native";
-import React, { useEffect, useState, version } from "react";
-import { images } from "@/constants/images";
-import MovieCard from "@/components/MovieCard";
-import useFetch from "@/services/usefetch";
-import { fetchMovies } from "@/services/api";
+import MovieDisplayCard from "@/components/MovieCard";
+import SearchBar from "@/components/Searchbar";
 import { icons } from "@/constants/icons";
-import Searchbar from "@/components/Searchbar";
+import { images } from "@/constants/images";
+import { fetchMovies } from "@/services/api";
 import { updateSearchCount } from "@/services/appwrite";
+import useFetch from "@/services/usefetch";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    data: movies,
-    loading: moviesLoading,
-    error: moviesError,
-    reset,
+    data: movies = [],
+    loading,
+    error,
     refetch: loadMovies,
-  } = useFetch(() =>
-    fetchMovies({
-      query: searchQuery
-    }), false
-  );
+    reset,
+  } = useFetch(() => fetchMovies({ query: searchQuery }), false);
 
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+  };
 
-  // Debounce the search (correct)
+  // Debounced search effect
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (searchQuery.trim()) {
-        await loadMovies(); // fetch TMDB movies
+        await loadMovies();
+
+        // Call updateSearchCount only if there are results
+        if (movies?.length! > 0 && movies?.[0]) {
+          await updateSearchCount(searchQuery, movies[0]);
+        }
       } else {
         reset();
       }
-    }, 800);
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // After movies are fetched → update Appwrite
-  useEffect(() => {
-    if (!searchQuery.trim()) return;
-    if (!movies || movies.length === 0) return;
-    if (moviesLoading) return;
+  // Debounced search effect
 
-    // update only for top movie
-    if (movies?.length > 0 && movies?.[0]) {
-      updateSearchCount(searchQuery, movies[0]);
-    }
-  }, [movies, moviesLoading]);
+  // useEffect(() => {
+  //   const timeoutId = setTimeout(async () => {
+  //     if (searchQuery.trim()) {
+  //       // Assuming fetchMovies/loadMovies returns the data directly. 
+  //       // If your useFetch hook returns data from the promise, capture it here.
+  //       // If useFetch does NOT return data, you might need to use a separate useEffect.
 
+  //       // OPTION 1: If loadMovies returns the data (Best way)
+  //       const result = await loadMovies();
+
+  //       // Check the RESULT, not the state variable 'movies'
+  //       if (result && result.length > 0) {
+  //         await updateSearchCount(searchQuery, result[0]);
+  //       }
+  //     } else {
+  //       reset();
+  //     }
+  //   }, 500);
+
+  //   return () => clearTimeout(timeoutId);
+  // }, [searchQuery]);
+  
+
+  
   return (
     <View className="flex-1 bg-primary">
       <Image
-        className="flex-1 absolute w-full z-0"
         source={images.bg}
+        className="flex-1 absolute w-full z-0"
         resizeMode="cover"
       />
 
       <FlatList
-        data={movies}
-        renderItem={({ item }) => <MovieCard {...item} />}
-        keyExtractor={(item) => item.id.toString()}
         className="px-5"
+        data={movies as Movie[]}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <MovieDisplayCard {...item} />}
         numColumns={3}
         columnWrapperStyle={{
-          justifyContent: "center",
+          justifyContent: "flex-start",
           gap: 16,
           marginVertical: 16,
         }}
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={
           <>
             <View className="w-full flex-row justify-center mt-20 items-center">
               <Image source={icons.logo} className="w-12 h-10" />
             </View>
+
             <View className="my-5">
-              <Searchbar
+              <SearchBar
+                placeholder="Search for a movie"
                 value={searchQuery}
-                onChangeText={(text: string) => setSearchQuery(text)}
-                placeholder="Whats on your mind????" />
+                onChangeText={handleSearch}
+              />
             </View>
-            {/* // if movie loading then show loading (ActivityIndicator) */}
-            {moviesLoading && (
+
+            {loading && (
               <ActivityIndicator
                 size="large"
                 color="#0000ff"
                 className="my-3"
               />
             )}
-            {/* // if movie occur error then show error msg */}
-            {moviesError && (
+
+            {error && (
               <Text className="text-red-500 px-5 my-3">
-                Error : {moviesError.message};
+                Error: {error.message}
               </Text>
             )}
 
-
-            {!moviesLoading &&
-              !moviesError &&
+            {!loading &&
+              !error &&
               searchQuery.trim() &&
-              movies!.length > 0 && <Text className="text-xl font-bold">
-                Search Result for {' '}
-                <Text className="text-accent font-bold">
-                  {searchQuery}
+              movies?.length! > 0 && (
+                <Text className="text-xl text-white font-bold">
+                  Search Results for{" "}
+                  <Text className="text-accent">{searchQuery}</Text>
                 </Text>
-              </Text>}
+              )}
           </>
         }
-
         ListEmptyComponent={
-          !moviesError && !moviesLoading ? (
+          !loading && !error ? (
             <View className="mt-10 px-5">
               <Text className="text-center text-gray-500">
                 {searchQuery.trim()

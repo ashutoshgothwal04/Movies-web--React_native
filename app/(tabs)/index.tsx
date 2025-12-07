@@ -7,7 +7,6 @@ import { fetchMovies } from "@/services/api";
 import { getTrendingMovies } from "@/services/appwrite";
 import useFetch from "@/services/usefetch";
 import { useRouter } from "expo-router";
-import { Link } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
@@ -65,27 +64,22 @@ export default function Index() {
             />
 
             {trendingMovies && (
-              <View className="flex flex-row items-center     justify-between">
+              <View className="flex flex-row items-center justify-between">
                 <Text className="text-lg text-wrap">Trending movies</Text>
               </View>
             )}
 
             <>
-
-
               <FlatList
                 horizontal
+                data={trendingMovies}
                 showsHorizontalScrollIndicator={false}
                 ItemSeparatorComponent={() => <View className="w-4" />}
                 className="mb-4 mt-3"
-                data={trendingMovies}
                 renderItem={({ item, index }) => (
-                  <TrendingCard
-                    index={index}
-                    movie={item} />
+                  <TrendingCard movie={item} index={index} />
                 )}
-
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item.movie_id.toString()}
               />
 
               <Text className="text-lg text-wrap">Latest movies</Text>
